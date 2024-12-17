@@ -1,0 +1,6 @@
+Django
+djangorestframework
+djangorestframework-simplejwt
+Pillow
+celery
+django-celery-beat

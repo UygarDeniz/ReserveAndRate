@@ -1,0 +1,69 @@
+
+### **.gitignore**
+
+```gitignore
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+db.sqlite3
+
+# Django migrations
+*/migrations/
+*/migrations/*
+
+
+
+# If you are using SQLite3
+*.sqlite3
+
+# If you are using PostgreSQL
+*.pgdata
+
+# If you are using MySQL
+*.myd
+*.myi
+*.frm
+
+# If you are using Redis
+dump.rdb
+
+# If you are using Celery
+celerybeat-schedule
+celerybeat.pid
+
+# If you are using Sentry
+sentry.db
+
+# If you are using PyCharm
+.idea/
+
+# If you are using VSCode
+.vscode/
+
+# If you are using Jupyter Notebook
+.ipynb_checkpoints
+
+# If you are using macOS
+.DS_Store
+
+# If you are using Windows
+Thumbs.db
+ehthumbs.db
+
+# If you are using Linux
+*~
+
+# Virtual environment
+venv/
+ENV/
+env/
+.venv/
