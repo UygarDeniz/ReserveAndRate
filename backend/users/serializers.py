@@ -30,9 +30,3 @@ class UserSerializer(serializers.ModelSerializer):
                   ]
         read_only_fields = ['id', 'created_at', 'updated_at']
          
-"""     def update(self, instance, validated_data):
-        instance.profile_image = validated_data.get('profile_image', instance.profile_image)
-        instance.bio = validated_data.get('bio', instance.bio)
-        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
-        instance.save()
-        return instance  """  
