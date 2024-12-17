@@ -21,17 +21,31 @@ class Restaurant(models.Model):
     def __str__(self):
         return self.name
 
-"""
- CUISINE_CHOICES = (
-        ('American', 'American'),
-        ('Chinese', 'Chinese'),
-        ('Indian', 'Indian'),
-        ('Italian', 'Italian'),
-        ('Japanese', 'Japanese'),
-        ('Mexican', 'Mexican'),
-        ('Thai', 'Thai'),
+class Review(models.Model):
+    RATING_CHOICES = (
+        (1, '1'),
+        (2, '2'),
+        (3, '3'),
+        (4, '4'),
+        (5, '5'),
     )
-"""
+    
+    user = models.ForeignKey('users.User', 
+                             on_delete=models.CASCADE, 
+                             related_name='reviews'
+                             )
+    restaurant = models.ForeignKey(Restaurant,
+                                    on_delete=models.CASCADE,
+                                    related_name='reviews'
+                                    )
+    rating = models.IntegerField(choices=RATING_CHOICES)
+    comment = models.TextField(blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.restaurant.name} - {self.rating} stars"
     
 
 

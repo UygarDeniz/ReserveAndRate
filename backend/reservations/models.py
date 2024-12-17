@@ -1,5 +1,5 @@
 from django.db import models
-from django.conf import settings
+
 class Reservation(models.Model):
     STATUS_CHOICES = (
         ('Pending', 'Pending'),
@@ -7,7 +7,7 @@ class Reservation(models.Model):
         ('Cancelled', 'Cancelled'),
     )
     
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reservations')
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name='reservations')
     restaurant = models.ForeignKey('restaurants.Restaurant', 
                                    on_delete=models.CASCADE, 
                                    related_name='reservations')

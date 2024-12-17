@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     "users",
     "restaurants",
     "reservations",
-    "reviews",
     "api",
 ]
 
