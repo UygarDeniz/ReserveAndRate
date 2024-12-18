@@ -12,7 +12,11 @@ class User(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    @property
+    def full_name(self):
+        return f'{self.first_name} {self.last_name}'
+    
     def __str__(self):
-        return self.username
+        return self.full_name
     
 
