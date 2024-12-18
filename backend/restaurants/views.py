@@ -14,7 +14,7 @@ class CuisineViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RestaurantViewSet(viewsets.ModelViewSet):
     queryset = Restaurant.objects.all().annotate(
-        average_rating=Avg('reviews.rating')
+        average_rating=Avg('reviews__rating')
     )
     
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -34,6 +34,7 @@ class RestaurantViewSet(viewsets.ModelViewSet):
 
 # Users can view their own reviews
 class ReviewViewSet(viewsets.ModelViewSet):
+    queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [permissions.IsAuthenticated]
 
