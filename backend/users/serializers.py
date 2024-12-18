@@ -8,10 +8,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         required=True,
         validators=[UniqueValidator(queryset=User.objects.all())]
         )
-    username = serializers.CharField(
-        required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())]
-        )
 
     password = serializers.CharField(write_only=True, required=True, 
                                      validators=[validate_password]
@@ -19,7 +15,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True, required=True)
     class Meta:
         model = User
-        fields = ["id", 'username', 'email', "phone_number", "profile_image","bio", 'password', 'password2']    
+        fields = ["id", 'email', "phone_number", "profile_image","bio", 'password', 'password2']    
         read_only_fields = ['id', 'created_at', 'updated_at']
     
     def validate(self, data):
