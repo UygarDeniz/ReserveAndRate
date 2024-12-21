@@ -12,13 +12,26 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, 
                                      validators=[validate_password]
                                      )
+    username = serializers.CharField(
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())]
+        )
+    
+    
     password2 = serializers.CharField(write_only=True, required=True)
     class Meta:
         model = User
-        fields = ["id", 'email', "phone_number", "profile_image","bio", 'password', 'password2']    
+        fields = ["id", 'email', "username", "first_name", "last_name", "phone_number", 'password', 'password2']    
         read_only_fields = ['id', 'created_at', 'updated_at']
+        extra_kwargs = {
+            'first_name': {'required': True},
+            'last_name': {'required': True},
+            'phone_number': {'required': True},
+        }
+            
     
     def validate(self, data):
+        print(data)
         if data['password'] != data['password2']:
             raise serializers.ValidationError({'password2': 'Passwords must match'})
         

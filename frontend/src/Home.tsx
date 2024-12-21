@@ -1,7 +1,7 @@
 
 function Home() {
   return (
-    <div className="text-2xl font-bold text-center">Home</div>
+    <div className="font-bold flex justify-center items-center min-h-screen text-6xl">Home</div>
   )
 }
 

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import LoginForm from './LoginForm';
+import { useEffect } from 'react';
 import RegisterForm from './RegisterForm';
+
 type AuthModalProps = {
   closeAuthModal: () => void;
 };
@@ -10,12 +12,23 @@ function AuthModal({ closeAuthModal }: AuthModalProps) {
   function changeForm() {
     setShowLoginModal(!showLoginModal);
   }
+  useEffect(() => {
+    document.body.classList.add('overflow-hidden');
+
+    return () => {
+      document.body.classList.remove('overflow-hidden');
+    };
+  }, []);
   return (
-    <div className='fixed inset-0 flex justify-center items-center z-10 bg-black bg-opacity-50'>
+    <div
+      className={
+        'fixed inset-0 flex justify-center items-center bg-black bg-opacity-50'
+      }
+    >
       {showLoginModal ? (
-        <LoginForm changeForm={changeForm} closeAuthModal={closeAuthModal}/>
+        <LoginForm changeForm={changeForm} closeAuthModal={closeAuthModal} />
       ) : (
-        <RegisterForm changeForm={changeForm} closeAuthModal={closeAuthModal}/>
+        <RegisterForm changeForm={changeForm} closeAuthModal={closeAuthModal} />
       )}
     </div>
   );

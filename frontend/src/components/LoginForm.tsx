@@ -1,47 +1,62 @@
-import { X } from 'lucide-react';
+import { LoaderCircle, X } from 'lucide-react';
 import { useState } from 'react';
 import * as z from 'zod';
-
+import { useMutation } from '@tanstack/react-query';
+import { loginUser } from '../api/loginUser';
+import { useUser } from '../contexts/userContext';
+import { AxiosError } from 'axios';
+import { useNavigate } from 'react-router';
 type LoginFormProps = {
   changeForm: () => void;
   closeAuthModal: () => void;
 };
 
 const LoginFormSchema = z.object({
-  email: z
-    .string({
-    
-      invalid_type_error: 'Invalid email address',
-      required_error: 'Email is required',
-    })
-    .email('Invalid email address'),
-  password: z.string({
-    invalid_type_error: 'Invalid password',
-    required_error: 'Password is required',
-  }),
+  username: z.string().nonempty("Username can't be empty"),
+  password: z.string().nonempty("Password can't be empty"),
 });
 
 type ErrorType = {
   [key: string]: string[];
 };
 
+type ErrorResponse = {
+  detail?: string[];
+};
+
 function LoginForm({ changeForm, closeAuthModal }: LoginFormProps) {
   const [errors, setErrors] = useState<ErrorType>({});
+  const { setAccessToken } = useUser();
+  const navigate = useNavigate();
+  const loginMutation = useMutation({
+    mutationFn: loginUser,
+    onError: (error: AxiosError<ErrorResponse>) => {
+      if (error?.response?.data?.detail) {
+        setErrors({ detail: error.response.data.detail });
+      } else {
+        setErrors({ detail: ['Something went wrong'] });
+      }
+    },
+    onSuccess: (data) => {
+      setErrors({});
+      closeAuthModal();
+      setAccessToken(data.access);
+      navigate('/protected');
+    },
+  });
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
+    const username = formData.get('username') as string;
     const password = formData.get('password') as string;
+    const validated_data = LoginFormSchema.safeParse({ username, password });
 
-    const validated_data = LoginFormSchema.safeParse({ email, password });
     if (!validated_data.success) {
       setErrors(validated_data.error.flatten().fieldErrors);
       return;
     }
 
-    setErrors({});
-    console.log('Form submitted', email, password);
+    loginMutation.mutate({ username, password });
   };
   return (
     <form
@@ -50,6 +65,7 @@ function LoginForm({ changeForm, closeAuthModal }: LoginFormProps) {
     >
       <div className='w-full bg-gray-50 flex justify-end border-b border-gray-200  rounded-t-3xl'>
         <button
+          type='button'
           className='p-2 text-gray-500 hover:text-gray-700'
           onClick={closeAuthModal}
         >
@@ -62,26 +78,35 @@ function LoginForm({ changeForm, closeAuthModal }: LoginFormProps) {
           <p className='text-gray-700 text-sm mb-4'>
             Welcome back! Please login to your account.
           </p>
+          {errors?.detail && (
+            <p className='text-red-500 text-xs' role='alert'>
+              {errors.detail}
+            </p>
+          )}
         </div>
         <div className='mb-4 mt-4'>
           <label
             className='block text-gray-600 text-xs font-bold mb-2 '
-            htmlFor='email'
+            htmlFor='username'
           >
-            Email
+            Username
           </label>
           <input
             className='border-2 border-gray-100 rounded-lg w-full py-3 px-3 text-gray-700 focus:outline-none placeholder:font-light'
-            id='email'
+            id='username'
             type='text'
-            name='email'
-            placeholder='Enter your email'
-            aria-describedby='email-error'
+            name='username'
+            placeholder='Enter your username'
+            aria-describedby='username-error'
           />
           <div className='h-[1.3rem]'>
-            {errors.email && (
-              <p className='text-red-500 text-xs' id='email-error' role='alert'>
-                {errors.email}
+            {errors.username && (
+              <p
+                className='text-red-500 text-xs'
+                id='username-error'
+                role='alert'
+              >
+                {errors.username}
               </p>
             )}
           </div>
@@ -114,8 +139,12 @@ function LoginForm({ changeForm, closeAuthModal }: LoginFormProps) {
           </div>
         </div>
         <div className='flex justify-center mt-4 w-full'>
-          <button className='bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 mt-6 w-1/2 rounded-2xl'>
-            Login
+          <button className='bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 mt-6 w-1/2 rounded-2xl focus:outline-none flex justify-center'>
+            {loginMutation.isPending ? (
+              <LoaderCircle className='animate-spin' />
+            ) : (
+              'Login'
+            )}
           </button>
         </div>
         <div className='flex justify-center mt-6 text-sm'>
