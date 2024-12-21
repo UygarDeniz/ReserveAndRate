@@ -15,7 +15,7 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = UserRegistrationSerializer
 
 
-class UserWithRefreshToken(views.APIView):
+class UserWithRefreshTokenView(views.APIView):
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
 
