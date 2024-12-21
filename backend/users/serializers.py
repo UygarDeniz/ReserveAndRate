@@ -2,6 +2,8 @@ from rest_framework import serializers
 from .models import User
 from django.contrib.auth.password_validation import validate_password
 from rest_framework.validators import UniqueValidator
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.exceptions import InvalidToken
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
@@ -50,4 +52,18 @@ class UserSerializer(serializers.ModelSerializer):
                   'bio', 'created_at', 'updated_at'
                   ]
         read_only_fields = ['id', 'created_at', 'updated_at']
-         
+
+class CookieTokenRefreshSerializer(TokenRefreshSerializer):
+    refresh = None
+
+    def validate(self, attrs):
+        """
+        If the refresh token is not found in the request cookie, raise an InvalidToken error.
+        """
+
+        attrs['refresh'] = self.context['request'].COOKIES.get('refresh_token')
+        if not attrs['refresh']:
+            raise InvalidToken(
+                "No valid token found in cookie 'refresh_token'")
+
+        return super().validate(attrs)

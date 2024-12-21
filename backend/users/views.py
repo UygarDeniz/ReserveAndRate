@@ -1,11 +1,9 @@
 from rest_framework import permissions, generics, status, views
 from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt import views as jwt_views
-from rest_framework_simplejwt.serializers import TokenRefreshSerializer, TokenObtainPairSerializer
 from rest_framework_simplejwt import tokens
 from rest_framework.response import Response
-from rest_framework_simplejwt.exceptions import InvalidToken
-from .serializers import UserRegistrationSerializer, UserSerializer
+from .serializers import UserRegistrationSerializer, UserSerializer, CookieTokenRefreshSerializer
 from .models import User
 
 
@@ -52,20 +50,6 @@ class UserWithRefreshTokenView(views.APIView):
             return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
 
 
-class CookieTokenRefreshSerializer(TokenRefreshSerializer):
-    refresh = None
-
-    def validate(self, attrs):
-        """
-        If the refresh token is not found in the request cookie, raise an InvalidToken error.
-        """
-
-        attrs['refresh'] = self.context['request'].COOKIES.get('refresh_token')
-        if not attrs['refresh']:
-            raise InvalidToken(
-                "No valid token found in cookie 'refresh_token'")
-
-        return super().validate(attrs)
 
 
 class CookieTokenObtainPairView(jwt_views.TokenObtainPairView):

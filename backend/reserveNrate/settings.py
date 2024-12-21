@@ -152,5 +152,5 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "user_id",
 
     "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainPairSerializer",
-    "TOKEN_REFRESH_SERIALIZER": "users.views.CookieTokenRefreshSerializer",
+    "TOKEN_REFRESH_SERIALIZER": "users.serializers.CookieTokenRefreshSerializer",
 }
