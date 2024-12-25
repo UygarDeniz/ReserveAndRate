@@ -13,9 +13,9 @@ const Header: React.FC = () => {
   const location = useLocation();
   const closeAuthModal = () => setShowAuthModal(false);
   return (
-    <header className='flex items-center bg-white shadow-md w-full opacity-[0.98] fixed top-0 min-h-16  z-10'>
-      <div className='px-6 flex items-center justify-between h-full w-full lg:mx-64'>
-        <Link to='/' className='text-xl font-bold text-gray-800 '>
+    <header className='flex items-center justify-center bg-white shadow-md w-full opacity-[0.98] fixed top-0 min-h-16  z-10 '>
+      <div className='px-2 flex items-center justify-between h-full max-w-screen-lg w-full '>
+        <Link to='/' className='text-xl font-semibold text-red-500 tracking-wider'>
           ReserveNRate
         </Link>
         {location.pathname !== '/' && <SearchBar />}
