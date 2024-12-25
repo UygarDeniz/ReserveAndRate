@@ -5,11 +5,18 @@ class Cuisine(models.Model):
 
     def __str__(self):
         return self.name
+    
+class City(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
 
 class Restaurant(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
-    address = models.CharField(max_length=255)
+    city = models.ForeignKey(City, related_name='restaurants', on_delete=models.SET_NULL, null=True)
+    full_address = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=255)
     opening_hours = models.CharField(max_length=20)
     image = models.ImageField(upload_to='restaurant_images/')

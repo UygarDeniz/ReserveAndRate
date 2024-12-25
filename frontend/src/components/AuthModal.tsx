@@ -22,7 +22,7 @@ function AuthModal({ closeAuthModal }: AuthModalProps) {
   return (
     <div
       className={
-        'fixed inset-0 flex justify-center items-center bg-black bg-opacity-50'
+        'fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-10'
       }
     >
       {showLoginModal ? (
