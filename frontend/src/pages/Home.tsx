@@ -93,7 +93,6 @@ function Home() {
         </div>
       </div>
 
-      {/* Footer Section */}
       <div className='bg-gray-100 p-8 text-center border-t'>
         <h3 className='text-2xl font-semibold mb-2'>Ready to dine?</h3>
         <p className='mb-2'>

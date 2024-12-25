@@ -4,6 +4,8 @@ import { Restaurant } from '../types/restaurant';
 type Params = {
   q?: string;
   page?: number;
+  city?: string;
+  cuisine?: string;
 };
 
 type Response = {

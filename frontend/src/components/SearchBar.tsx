@@ -13,6 +13,7 @@ function SearchBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/';
+
   function handleSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);

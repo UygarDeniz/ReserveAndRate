@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Cuisine, Restaurant, Review
+from .models import City, Cuisine, Restaurant, Review
 
 
 class CuisineSerializer(serializers.ModelSerializer):
@@ -48,3 +48,10 @@ class ReviewSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
+
+
+class CitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
+        fields = ['id', 'name']
+        read_only_fields = ['id']
