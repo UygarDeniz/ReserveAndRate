@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import UserProvider from './contexts/userContext';
 import ProtectedComponent from './components/ProtectedComponent';
 import Restaurants from './pages/Restaurants';
+import RestaurantDetail from './pages/RestaurantDetail';
 function App() {
   return (
     <Router>
@@ -13,6 +14,7 @@ function App() {
         <Routes>
           <Route index element={<Home />} />
           <Route path='/restaurants' element={<Restaurants />} />
+          <Route path='/restaurants/:id' element={<RestaurantDetail />} />
           <Route path='/protected' element={<ProtectedRoute />}>
             <Route  path="" element={<ProtectedComponent />} />
           </Route>

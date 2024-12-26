@@ -43,6 +43,7 @@ function SearchBar() {
         type='text'
         id='search'
         name='search'
+        defaultValue={searchParams.get('q') || ''}
         placeholder='Search restaurants...'
         aria-label='Search restaurants'
         className={cn('w-full px-4 rounded-2xl text-black focus:outline-none', {

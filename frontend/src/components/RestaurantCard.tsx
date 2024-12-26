@@ -15,12 +15,10 @@ function RestaurantCard({ restaurant } : { restaurant: Restaurant }) {
         {restaurant.name}
       </h2>
       <p className='text-gray-500 mb-2 text-sm  flex-grow'>
-        {restaurant.description.length > 200
-          ? `${restaurant.description.substring(0, 200)}...`
-          : restaurant.description}
+        {restaurant.summary}
       </p>
       <div className='h-16'>
-        <p className='text-gray-700 mb-2'>
+        <div className='text-gray-700 mb-2'>
           <strong>Cuisines:</strong>{' '}
           {restaurant.cuisines
             .map((cuisine) => cuisine.name)
@@ -28,7 +26,7 @@ function RestaurantCard({ restaurant } : { restaurant: Restaurant }) {
           <p className='text-gray-700 mb-2'>
             {restaurant.average_rating || 0} 
           </p>
-        </p>
+        </div>
       </div>
     </div>
   </div>

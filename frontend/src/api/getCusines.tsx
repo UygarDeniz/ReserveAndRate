@@ -6,7 +6,7 @@ type Cuisine = {
 };
 
 async function getCuisines(): Promise<Cuisine[]> {
-  const res = await axios.get('api/cuisines');
+  const res = await axios.get('/api/cuisines');
   return res.data;
 }
 

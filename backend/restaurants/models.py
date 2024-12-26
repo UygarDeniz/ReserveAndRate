@@ -30,6 +30,12 @@ class Restaurant(models.Model):
     max_number_of_guests = models.IntegerField(default=0)
     image = models.ImageField(upload_to='restaurant_images/')
     cuisines = models.ManyToManyField(Cuisine, related_name='restaurants')
+    
+    
+    highlights = models.JSONField(null=True, blank=True)
+    remarks = models.TextField(null=True, blank=True)
+    cancellation_policy = models.TextField(null=True, blank=True)
+    
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

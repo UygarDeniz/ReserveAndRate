@@ -1,4 +1,4 @@
-import { useLocation, useSearchParams } from 'react-router';
+import { Link, useLocation, useSearchParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getRestaurants } from '../api/getRestaurants';
 import RestaurantCard from '../components/RestaurantCard';
@@ -51,11 +51,15 @@ function Restaurants() {
 
   if (isPending) {
     return (
-      <div className={cn('flex justify-center items-center h-screen animate-spin',
-        {
-          'fixed top-0 left-0 w-full h-full bg-white bg-opacity-50 z-10': isRestaurantPage,
-        }
-      )}>
+      <div
+        className={cn(
+          'flex justify-center items-center h-screen animate-spin',
+          {
+            'fixed top-0 left-0 w-full h-full bg-white bg-opacity-50 z-10':
+              isRestaurantPage,
+          }
+        )}
+      >
         <LoaderCircle />
       </div>
     );
@@ -83,7 +87,9 @@ function Restaurants() {
           <>
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 break-all h-full mt-4'>
               {restaurants.results.map((restaurant) => (
-                <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+                <Link to={`/restaurants/${restaurant.id}`} key={restaurant.id}>
+                  <RestaurantCard restaurant={restaurant} />
+                </Link>
               ))}
             </div>
             <div className='flex justify-center mt-8'>
