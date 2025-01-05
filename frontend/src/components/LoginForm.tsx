@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { loginUser } from '../api/loginUser';
 import { useUser } from '../contexts/userContext';
 import { AxiosError } from 'axios';
-import { useNavigate } from 'react-router';
+import axios from '../api/axios';
 type LoginFormProps = {
   changeForm: () => void;
   closeAuthModal: () => void;
@@ -27,7 +27,7 @@ type ErrorResponse = {
 function LoginForm({ changeForm, closeAuthModal }: LoginFormProps) {
   const [errors, setErrors] = useState<ErrorType>({});
   const { setAccessToken } = useUser();
-  const navigate = useNavigate();
+  const { setUser } = useUser();
   const loginMutation = useMutation({
     mutationFn: loginUser,
     onError: (error: AxiosError<ErrorResponse>) => {
@@ -37,11 +37,31 @@ function LoginForm({ changeForm, closeAuthModal }: LoginFormProps) {
         setErrors({ detail: ['Something went wrong'] });
       }
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       setErrors({});
-      closeAuthModal();
       setAccessToken(data.access);
-      navigate('/protected');
+      try {
+        // Fetch user data after setting the access token
+        const userResponse = await axios.get('/api/users/me/', {
+          headers: {
+            Authorization: `Bearer ${data.access}`,
+          },
+        });
+        setUser({
+          id: userResponse.data.id,
+          username: userResponse.data.username,
+          email: userResponse.data.email,
+          phone_number: userResponse.data.phone_number,
+          profile_image: userResponse.data.profile_image,
+          bio: userResponse.data.bio,
+        });
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+        // Optionally handle the error, e.g., log out the user
+      }
+
+      closeAuthModal();
+      // Removed navigation to '/protected'
     },
   });
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {

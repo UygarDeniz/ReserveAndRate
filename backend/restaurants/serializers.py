@@ -56,3 +56,4 @@ class CitySerializer(serializers.ModelSerializer):
         model = City
         fields = ['id', 'name']
         read_only_fields = ['id']
+

@@ -4,7 +4,7 @@ import { useUser } from '../contexts/userContext';
 import { useRefreshToken } from './useRefreshToken';
 
 const useProtectedAxios = () => {
-  const { accessToken, logout } = useUser();
+  const { accessToken, logout, openAuthModal } = useUser();
   const refresh = useRefreshToken();
   const refreshTokenPromise = useRef<Promise<string | null> | null>(null);
 
@@ -24,7 +24,7 @@ const useProtectedAxios = () => {
       async (error) => {
         const prevRequest = error?.config;
         if (
-          error?.response?.status === 403 &&
+          error?.response?.status === 401 &&
           prevRequest &&
           !prevRequest?.sent
         ) {
@@ -42,9 +42,10 @@ const useProtectedAxios = () => {
             } else {
               throw new Error('Failed to refresh token');
             }
-          } catch (refreshError) {
+          } catch  {
             logout();
-            throw refreshError;
+            openAuthModal();
+
           } finally {
             refreshTokenPromise.current = null;
           }
@@ -56,7 +57,7 @@ const useProtectedAxios = () => {
       protectedAxios.interceptors.request.eject(requestIntercept);
       protectedAxios.interceptors.response.eject(responseIntercept);
     };
-  }, [accessToken, logout, refresh]);
+  }, [accessToken, logout, refresh, openAuthModal,]);
 
   return protectedAxios;
 };

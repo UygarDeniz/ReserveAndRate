@@ -9,4 +9,8 @@ router.register(r'restaurants', views.RestaurantViewSet)
 router.register(r'reviews', views.ReviewViewSet)
 router.register(r'cities', views.CityViewSet)
 
-urlpatterns = router.urls
+urlpatterns = [
+    
+]
+
+urlpatterns += router.urls

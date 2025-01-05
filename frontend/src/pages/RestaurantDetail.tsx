@@ -8,6 +8,7 @@ import {
   MapPin,
 } from 'lucide-react';
 import { getRestaurantById } from '../api/getRestaurants';
+import Reservation from '../components/Reservation';
 
 const reviews = [
   {
@@ -25,6 +26,7 @@ const reviews = [
 ];
 export default function RestaurantDetail() {
   const { id } = useParams<{ id: string }>();
+  
   const {
     data: restaurant,
     isLoading,
@@ -34,6 +36,7 @@ export default function RestaurantDetail() {
     queryFn: () => getRestaurantById(id as string),
     enabled: !!id,
   });
+  
 
   if (isLoading) {
     return (
@@ -72,9 +75,9 @@ export default function RestaurantDetail() {
           className='w-full h-96 object-cover rounded-2xl self-start'
         />
 
-        <div className='flex w-full gap-x-6 mt-8'>
-          <article className='w-2/3'>
-            <nav className='w-full  bg-gray-100 rounded-2xl py-4 sticky top-16 z-50'>
+        <div className=' flex flex-col lg:flex-row w-full gap-x-6 mt-8'>
+          <article className='w-full lg:w-2/3'>
+            <nav className='w-full  bg-gray-100 rounded-2xl py-4 sticky top-16 z-10'>
               {[
                 'Overview',
                 'Description',
@@ -92,6 +95,9 @@ export default function RestaurantDetail() {
                   {section}
                 </button>
               ))}
+              <button onClick={() => scrollWithOffset('reservation')} className='bg-red-500 rounded-2xl  text-white py-1 px-6 lg:hidden'>
+                Reservation
+              </button>
             </nav>
             <section
               id='restaurant-overview'
@@ -176,7 +182,10 @@ export default function RestaurantDetail() {
                 </div>
               ))}
             </section>
-            <section id='restaurant-reviews' className='mt-8 bg-gray-200 px-4 py-6 rounded-2xl'>
+            <section
+              id='restaurant-reviews'
+              className='mt-8 bg-gray-200 px-4 py-6 rounded-2xl'
+            >
               <h2 className='text-xl font-bold mb-2 text-gray-700'>Reviews</h2>
               {reviews && reviews.length > 0 ? (
                 reviews.map((review) => (
@@ -193,8 +202,8 @@ export default function RestaurantDetail() {
               )}
             </section>
           </article>
-          <div className='w-1/3 bg-gray-200 rounded-2xl max-h-96 sticky top-16'>
-            Booking
+          <div className='flex justify-center  lg:w-1/3 lg:max-h-96 lg:sticky lg:top-16' id='reservation'>
+            {<Reservation  restaurantId={id as string}/>}
           </div>
         </div>
       </div>

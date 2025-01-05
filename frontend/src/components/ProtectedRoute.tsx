@@ -18,6 +18,10 @@ function ProtectedRoute() {
         setUser({
           id: res.data.id,
           username: res.data.username,
+          email: res.data.email,
+          phone_number: res.data.phone_number,
+          profile_image: res.data.profile_image,
+          bio: res.data.bio,
         });
       } catch (error) {
         console.error(error);
