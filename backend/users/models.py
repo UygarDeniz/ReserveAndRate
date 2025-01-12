@@ -1,7 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-
+ROLES = (
+ ("restaurant", "Restaurant"),
+ ("customer", "Customer"),
+)
 class User(AbstractUser):
+    role = models.CharField(max_length=20, choices=ROLES, default='customer')
     profile_image = models.ImageField(upload_to='profile_images/', 
                                       null=True, 
                                       blank=True, 

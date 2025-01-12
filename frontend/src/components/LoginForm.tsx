@@ -54,6 +54,7 @@ function LoginForm({ changeForm, closeAuthModal }: LoginFormProps) {
           phone_number: userResponse.data.phone_number,
           profile_image: userResponse.data.profile_image,
           bio: userResponse.data.bio,
+          role: userResponse.data.role,
         });
       } catch (error) {
         console.error('Failed to fetch user data:', error);

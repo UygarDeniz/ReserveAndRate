@@ -1,4 +1,4 @@
-import { Link, useLocation, useSearchParams } from 'react-router';
+import { Link,useSearchParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getRestaurants } from '../api/getRestaurants';
 import RestaurantCard from '../components/RestaurantCard';
@@ -8,11 +8,10 @@ import FilterBar from '../components/FilterBar';
 import getCities from '../api/getCities';
 import getCuisines from '../api/getCusines';
 import { cn } from '../lib/utils';
+import { PAGE_SIZE } from '../lib/constants';
 
 function Restaurants() {
   const [searchParams] = useSearchParams();
-  const location = useLocation();
-  const isRestaurantPage = location.pathname === '/restaurants';
 
   const q = searchParams.get('q') || '';
   const page = searchParams.get('page') || 1;
@@ -52,13 +51,7 @@ function Restaurants() {
   if (isPending) {
     return (
       <div
-        className={cn(
-          'flex justify-center items-center h-screen animate-spin',
-          {
-            'fixed top-0 left-0 w-full h-full bg-white bg-opacity-50 z-10':
-              isRestaurantPage,
-          }
-        )}
+        className={cn('flex justify-center items-center animate-spin h-screen')}
       >
         <LoaderCircle />
       </div>
@@ -74,8 +67,8 @@ function Restaurants() {
   }
 
   return (
-    <div className='flex flex-col items-center w-full px-4 py-8'>
-      <div className='max-w-screen-lg w-full min-h-[90vh]'>
+    <div className='flex flex-col items-center w-full px-4 py-8 min-h-[90vh]'>
+      <div className='max-w-screen-lg w-full h-full'>
         <h1 className='text-4xl font-bold  self-start mb-8'>Restaurants</h1>
         <FilterBar
           availableCities={availableCities}
@@ -94,7 +87,7 @@ function Restaurants() {
             </div>
             <div className='flex justify-center mt-8'>
               <PaginationButtons
-                totalPages={Math.ceil(restaurants.count / 2)}
+                totalPages={Math.ceil(restaurants.count / PAGE_SIZE)}
                 nextPage={restaurants.next}
                 prevPage={restaurants.previous}
               />

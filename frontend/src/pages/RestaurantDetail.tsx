@@ -1,5 +1,5 @@
 import { useParams } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import {
   Banknote,
   CircleUser,
@@ -10,23 +10,20 @@ import {
 import { getRestaurantById } from '../api/getRestaurants';
 import Reservation from '../components/Reservation';
 
-const reviews = [
-  {
-    id: 1,
-    user: 'John Doe',
-    rating: 4,
-    comment: 'Great food and service!',
-  },
-  {
-    id: 2,
-    user: 'Jane Doe',
-    rating: 5,
-    comment: 'Best restaurant in town!',
-  },
-];
+import axios from '../api/axios';
+import { ReviewsList } from '../components/ReviewsList';
+import { Review } from '../types/review';
+
+type ReviewResponse = {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Review[];
+};
+
 export default function RestaurantDetail() {
   const { id } = useParams<{ id: string }>();
-  
+
   const {
     data: restaurant,
     isLoading,
@@ -36,7 +33,25 @@ export default function RestaurantDetail() {
     queryFn: () => getRestaurantById(id as string),
     enabled: !!id,
   });
-  
+  const {
+    data: reviews,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['reviews', id],
+    queryFn: async ({ pageParam }): Promise<ReviewResponse> => {
+      const res = await axios(`/api/restaurants/${id}/reviews`, {
+        params: { page: pageParam },
+      });
+      return res.data;
+    },
+    enabled: !!id,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.next ? allPages.length + 1 : undefined;
+    },
+  });
+  console.log(reviews);
 
   if (isLoading) {
     return (
@@ -95,7 +110,10 @@ export default function RestaurantDetail() {
                   {section}
                 </button>
               ))}
-              <button onClick={() => scrollWithOffset('reservation')} className='bg-red-500 rounded-2xl  text-white py-1 px-6 lg:hidden'>
+              <button
+                onClick={() => scrollWithOffset('reservation')}
+                className='bg-red-500 rounded-2xl  text-white py-1 px-6 lg:hidden'
+              >
                 Reservation
               </button>
             </nav>
@@ -107,7 +125,9 @@ export default function RestaurantDetail() {
                 <MapPin className='mt-1' color='#ffffff' fill='#000000' />
                 <div>
                   <p className='font-semibold text-gray-700'>Location</p>
-                  <p className='text-gray-600 text-sm'>{restaurant.city}</p>
+                  <p className='text-gray-600 text-sm'>
+                    {restaurant.city?.name}
+                  </p>
                 </div>
               </div>
               <div className='flex items-start space-x-4 w-1/3 mb-8'>
@@ -152,15 +172,15 @@ export default function RestaurantDetail() {
                 {restaurant.description}
               </p>
             </section>
-            <section id='restaurant-highlights' className='mt-8'>
-              {restaurant?.highlights && restaurant.highlights.length > 0 ? (
+            <section id='restaurant-remarks' className='mt-8'>
+              {restaurant?.remarks && restaurant.remarks.length > 0 ? (
                 <div>
                   <h2 className='text-xl font-semibold text-gray-700 mb-4'>
-                    Highlights
+                    Remarks
                   </h2>
                   <ul className='list-disc text-gray-600 pl-4'>
-                    {restaurant.highlights.map((highlight) => (
-                      <li key={highlight}>{highlight}</li>
+                    {restaurant.remarks.map((remark) => (
+                      <li key={remark}>{remark}</li>
                     ))}
                   </ul>
                 </div>
@@ -184,26 +204,27 @@ export default function RestaurantDetail() {
             </section>
             <section
               id='restaurant-reviews'
-              className='mt-8 bg-gray-200 px-4 py-6 rounded-2xl'
+              className='mt-8 bg-gray-100 pr-8 pl-4 py-6 rounded-2xl'
             >
               <h2 className='text-xl font-bold mb-2 text-gray-700'>Reviews</h2>
-              {reviews && reviews.length > 0 ? (
-                reviews.map((review) => (
-                  <div key={review.id} className='mb-4 border-b pb-2'>
-                    <p className='font-semibold'>{review.user}</p>
-                    <p className='text-sm text-gray-600'>
-                      Rating: {review.rating}
-                    </p>
-                    <p className='text-gray-700'>{review.comment}</p>
-                  </div>
-                ))
+              {reviews && reviews.pages.length > 0 ? (
+                <ReviewsList
+                  reviews={reviews}
+                  avarageRating={restaurant.average_rating}
+                  totalReviews={restaurant.total_reviews}
+                  hasNextPage={hasNextPage}
+                  fetchNextPage={fetchNextPage}
+                />
               ) : (
-                <p className='text-sm text-gray-500'>No reviews available.</p>
+                <p className='text-sm text-gray-500 '>No reviews available.</p>
               )}
             </section>
           </article>
-          <div className='flex justify-center  lg:w-1/3 lg:max-h-96 lg:sticky lg:top-16' id='reservation'>
-            {<Reservation  restaurantId={id as string}/>}
+          <div
+            className='flex justify-center  lg:w-1/3 lg:max-h-96 lg:sticky lg:top-16'
+            id='reservation'
+          >
+            {<Reservation restaurantId={id as string} />}
           </div>
         </div>
       </div>

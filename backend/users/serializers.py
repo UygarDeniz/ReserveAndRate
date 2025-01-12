@@ -33,7 +33,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             
     
     def validate(self, data):
-        print(data)
         if data['password'] != data['password2']:
             raise serializers.ValidationError({'password2': 'Passwords must match'})
         
@@ -49,9 +48,9 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 
                   'phone_number', 'profile_image',
-                  'bio', 'created_at', 'updated_at'
+                  'bio', 'created_at', 'updated_at', "role"
                   ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', "role"]
 
 class CookieTokenRefreshSerializer(TokenRefreshSerializer):
     refresh = None

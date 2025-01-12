@@ -8,9 +8,9 @@ export const useRefreshToken = () => {
       withCredentials: true,
     });
 
-    setAccessToken(res.data.accessToken);
+    setAccessToken(res.data.access);
 
-    return res.data.accessToken;
+    return res.data.access;
   };
 
   return refresh;

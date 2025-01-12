@@ -1,22 +1,55 @@
 from datetime import datetime
 from calendar import monthrange
-from django.db import models
 from django.db.models import F
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from django.forms import ValidationError
+from django.shortcuts import get_object_or_404
+from rest_framework import status, views, permissions
 from rest_framework.response import Response
+from restaurants.models import Restaurant
 from .models import TimeSlot, Reservation, BlockedDate
 from rest_framework import generics
-from .serializers import ReservationSerializer, UserReservationSerializer
+from .serializers import ReservationSerializer, UserReservationSerializer, TimeSlotSerializer
 
 
-class ReservationViewSet(viewsets.ModelViewSet):
-    queryset = Reservation.objects.all()
-    serializer_class = ReservationSerializer
+class ReservationView(views.APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-    @action(detail=False, methods=['GET'], url_path='available-days')
-    def available_days(self, request):
+    def get(self, request, pk=None):
+        """
+        If pk is supplied, retrieve single reservation.
+        Otherwise, list all reservations.
+        """
+        if pk:
+            try:
+                reservation = Reservation.objects.get(pk=pk)
+            except Reservation.DoesNotExist:
+                return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+            serializer = ReservationSerializer(reservation)
+            return Response(serializer.data)
+        else:
+            # List all reservations
+            queryset = Reservation.objects.all()
+            serializer = ReservationSerializer(queryset, many=True)
+            return Response(serializer.data)
 
+    def post(self, request):
+        """
+        Create a new reservation.
+        """
+        serializer = ReservationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AvailableDaysView(views.APIView):
+    """
+    Return available days for a given restaurant and month.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
         restaurant_id = request.query_params.get('restaurant_id')
         year = int(request.query_params.get('year', 0))
         month = int(request.query_params.get('month', 0))
@@ -26,50 +59,68 @@ class ReservationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # blocked dates
-        blocked_dates = set(BlockedDate.objects.filter(
-            restaurant_id=restaurant_id,
-            date__year=year,
-            date__month=month
-        ).values_list('date', flat=True))
+        restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+        today = datetime.now().date()
 
-        # find days that have at least one slot open
+        blocked_dates = set(
+            BlockedDate.objects.filter(
+                restaurant_id=restaurant_id,
+                date__year=year,
+                date__month=month
+            ).values_list('date', flat=True)
+        )
+
         _, days_in_month = monthrange(year, month)
         available_days = []
+
         for day in range(1, days_in_month + 1):
             date_obj = datetime(year, month, day).date()
-
-            # Mark as unavailable if date is blocked
             if date_obj in blocked_dates:
                 available_days.append(
                     {"date": date_obj.isoformat(), "available": False})
                 continue
 
-            # get any timeslot with available capacity
-            has_open_slot = TimeSlot.objects.filter(
+            if date_obj < today:
+                available_days.append(
+                    {"date": date_obj.isoformat(), "available": False})
+                continue
+
+            if date_obj == today:
+                has_open_slot = TimeSlot.objects.filter(
+                    restaurant_id=restaurant_id,
+                    date=date_obj,
+                    current_bookings__lt=F('max_bookings'),
+                    start_time__gte=datetime.now().time()
+                ).exists()
+                available_days.append(
+                    {"date": date_obj.isoformat(), "available": has_open_slot})
+                continue
+
+            available = TimeSlot.objects.filter(
                 restaurant_id=restaurant_id,
                 date=date_obj,
                 current_bookings__lt=F('max_bookings')
             ).exists()
 
-            available_days.append({
-                "date": date_obj.isoformat(),
-                "available": has_open_slot
-            })
-
+            available_days.append(
+                {"date": date_obj.isoformat(), "available": available})
         return Response(available_days)
 
-    @action(detail=False, methods=['GET'], url_path='available-time-slots')
-    def available_time_slots(self, request):
+
+class AvailableTimeSlotsView(views.APIView):
+    """
+    Return available time slots for a given restaurant and date.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
         restaurant_id = request.query_params.get('restaurant_id')
         date_str = request.query_params.get('date')
-
         if not all([restaurant_id, date_str]):
             return Response(
                 {"error": "restaurant_id and date are required"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
         try:
             selected_date = datetime.strptime(date_str, '%Y-%m-%d').date()
         except ValueError:
@@ -78,28 +129,94 @@ class ReservationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Filter timeslots by date with remaining capacity
-        slots = TimeSlot.objects.filter(
-            restaurant_id=restaurant_id,
-            date=selected_date,
-            current_bookings__lt=models.F('max_bookings')
-        ).order_by('start_time')
+        if selected_date < datetime.now().date():
+            return Response(
+                {"error": "Cannot book for a past date."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        data = []
-        for slot in slots:
-            data.append({
-                'id': slot.id,
-                'start_time': slot.start_time.strftime('%H:%M'),
-                'end_time': slot.end_time.strftime('%H:%M'),
-                'available_capacity': slot.max_bookings - slot.current_bookings
-            })
+        today = datetime.now().date()
 
-        return Response(data)
+        if selected_date == today:
+            slots = TimeSlot.objects.filter(
+                restaurant_id=restaurant_id,
+                date=selected_date,
+                current_bookings__lt=F('max_bookings'),
+                start_time__gte=datetime.now().time()
+            ).order_by('start_time')
+            slots = TimeSlotSerializer(slots, many=True).data
+            return Response(slots)
+        else:
+            slots = TimeSlot.objects.filter(
+                restaurant_id=restaurant_id,
+                date=selected_date,
+                current_bookings__lt=F('max_bookings')
+            ).order_by('start_time')
+
+            slots = TimeSlotSerializer(slots, many=True).data
+            return Response(slots)
 
 
 class UserReservationsView(generics.ListAPIView):
+    """
+    List all reservations for the authenticated user.
+    """
     queryset = Reservation.objects.all()
     serializer_class = UserReservationSerializer
 
     def get_queryset(self):
         return Reservation.objects.filter(user=self.request.user).order_by('-created_at')
+
+class RestaurantReservationsView(generics.ListAPIView):
+    """
+    List all reservations for the authenticated user.
+    """
+    queryset = Reservation.objects.all()
+    serializer_class = UserReservationSerializer
+
+    def get_queryset(self):
+        if self.request.user.role != 'restaurant':
+            raise ValidationError(
+                "You must be a restaurant owner to view reservations.")
+        if self.request.user.restaurant_profile is None:
+            raise ValidationError(
+                "You must be a restaurant owner to view reservations.")
+        return Reservation.objects.filter(time_slot__restaurant=self.request.user.restaurant_profile).order_by('-created_at')
+    
+
+class TimeSlotCreateView(generics.CreateAPIView):
+    """
+    Create a new time slot for a restaurant.
+    """
+    serializer_class = TimeSlotSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        if self.request.user.role != 'restaurant':
+            raise ValidationError(
+                "You must be a restaurant owner to create time slots.")
+        if self.request.user.restaurant_profile != serializer.validated_data['restaurant']:
+            raise ValidationError(
+                "You can only create time slots for your own restaurant.")
+
+        serializer.save(restaurant=self.request.user.restaurant_profile)
+        
+class TimeSlotDeleteView(generics.DestroyAPIView):
+    """
+    Delete a time slot.
+    """
+    queryset = TimeSlot.objects.all()
+    serializer_class = TimeSlotSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_destroy(self, instance):
+        if self.request.user.role != 'restaurant':
+            raise ValidationError(
+                "You must be a restaurant owner to delete time slots.")
+        if self.request.user.restaurant_profile is None:
+            raise ValidationError(
+                "You must be a restaurant owner to delete time slots.")
+        if self.request.user.restaurant_profile != instance.restaurant:
+            raise ValidationError(
+                "You can only delete time slots for your own restaurant.")
+        instance.delete()

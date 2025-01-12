@@ -67,4 +67,5 @@ media/
 venv/
 ENV/
 env/
+.env
 .venv/

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, LoaderCircle } from 'lucide-react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '../api/axios';
 import useProtectedAxios from '../hooks/useProtectedAxios';
 import { useUser } from '../contexts/userContext';
-import { AxiosError } from 'axios';
+import { AxiosError, isAxiosError } from 'axios';
 import { cn } from '../lib/utils';
 const daysOfWeek = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
 const months = [
@@ -39,34 +39,7 @@ function Reservation({ restaurantId }: { restaurantId: string }) {
   const [error, setError] = useState('');
   const { user, openAuthModal } = useUser();
   const protectedAxios = useProtectedAxios();
-
-  const { mutate: createReservation, isError } = useMutation({
-    mutationFn: ({
-      time_slot,
-      guests,
-      special_request
-    }: {
-      time_slot: number;
-      guests: string;
-      special_request: string
-    }) =>
-      protectedAxios.post('/api/reservations/', {
-        time_slot,
-        guests,
-        special_request
-      }),
-    onSuccess: () => {
-      alert('Reservation confirmed!');
-    },
-    onError: (error: AxiosError) => {
-      if (error.status == 401) {
-        setError('Please log in to make a reservation');
-      } else {
-        setError('Failed to make reservation');
-      }
-    },
-  });
-
+  const queryClient = useQueryClient();
   const { data: monthlyAvailability = [], isPending } = useQuery({
     queryKey: [
       'monthlyAvailability',
@@ -81,6 +54,32 @@ function Reservation({ restaurantId }: { restaurantId: string }) {
         }`
       );
       return response.json();
+    },
+  });
+  const { mutate: deleteTimeSlot } = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await protectedAxios.delete(
+        `/api/reservations/time-slots/${id}/`
+      );
+      return response.data;
+    },
+    onError: (error: unknown) => {
+      if (error && isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        const errorDetail = (axiosError.response?.data as { detail: string })
+          ?.detail;
+        setError(errorDetail || axiosError.message);
+      } else {
+        setError('An error occurred');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['timeSlots', restaurantId, selectedDate],
+      });
+      alert('Time slot deleted successfully');
+      setError('');
+      setSelectedTime(null);
     },
   });
 
@@ -130,24 +129,6 @@ function Reservation({ restaurantId }: { restaurantId: string }) {
     setSelectedTime(null);
   };
 
-  const handleReservation = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!user) {
-      openAuthModal();
-      return;
-    }
-    if (!selectedDate || !selectedTime) return;
-
-    const formData = new FormData(e.currentTarget);
-    const guests = formData.get('guests') as string;
-    console.log("Guests", guests)
-    createReservation({
-      time_slot: selectedTime.id,
-      guests: guests,
-      special_request: ""
-    });
-  };
-
   useEffect(() => {
     const timeslots = window.document.getElementById('time-slots');
     if (timeslots) {
@@ -161,6 +142,11 @@ function Reservation({ restaurantId }: { restaurantId: string }) {
       selectedTimeEl.scrollIntoView({ behavior: 'smooth' });
     }
   }, [selectedTime]);
+
+  async function handleDeleteTimeSlot() {
+    if (!selectedTime) return;
+    deleteTimeSlot(selectedTime.id);
+  }
 
   return (
     <div className='bg-white w-1/3 pt-16 lg:w-full lg:pt-0'>
@@ -269,24 +255,19 @@ function Reservation({ restaurantId }: { restaurantId: string }) {
             ))}
           </div>
           {selectedTime && (
-            <div id='selected-time' className=''>
-              <h2 className='text-lg font-semibold mb-4'>Guests</h2>
-              <form onSubmit={handleReservation}>
-                <input
-                  type='text'
-                  name='guests'
-                  className='w-full border rounded py-2 px-4 '
-                  placeholder='Number of guests'
-                />
-                <button className='bg-red-500 text-white w-full py-2 rounded mt-4 hover:bg-red-600'>
-                  Reserve
-                </button>
-              </form>
-              {isError && <div className='text-red-500'>{error}</div>}
+            <div
+              id='selected-time'
+              onClick={handleDeleteTimeSlot}
+              className='mt-4'
+            >
+              <button className='bg-red-500 text-white w-full py-2 rounded mt-4 hover:bg-red-600'>
+                Delete
+              </button>
             </div>
           )}
         </div>
       )}
+      {error && <div className='text-red-500 mt-4'>{error}</div>}
     </div>
   );
 }

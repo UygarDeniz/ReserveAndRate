@@ -49,15 +49,6 @@ class UserWithRefreshTokenView(views.APIView):
             print("Serializer is not valid:", serializer.errors)
             return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
 
-    def put(self, request):
-        user = request.user
-        serializer = UserSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 class CookieTokenObtainPairView(jwt_views.TokenObtainPairView):
     """
@@ -83,6 +74,7 @@ class CookieTokenRefreshView(jwt_views.TokenRefreshView):
             del response.data['refresh']
         return super().finalize_response(request, response, *args, **kwargs)
     serializer_class = CookieTokenRefreshSerializer
+
 
 class Logout(views.APIView):
     permission_classes = [permissions.AllowAny]

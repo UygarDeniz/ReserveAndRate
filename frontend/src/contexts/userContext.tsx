@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import axios from '../api/axios';
 import { useNavigate } from 'react-router';
+import { AxiosError } from 'axios';
 type User = {
   id: string;
   username: string;
@@ -16,6 +17,7 @@ type User = {
   phone_number?: string;
   profile_image?: string;
   bio?: string;
+  role: string;
 };
 
 type UserContextType = {
@@ -84,9 +86,14 @@ export default function UserProvider({
           phone_number: res.data.phone_number,
           profile_image: res.data.profile_image,
           bio: res.data.bio,
+          role: res.data.role,
         });
-      } catch (error) {
-        console.error(error);
+      } catch (error: unknown) {
+        if (error instanceof AxiosError) {
+          console.error(error.message);
+        } else {
+          console.error('An unknown error occurred');
+        }
       }
       setLoading(false);
     };

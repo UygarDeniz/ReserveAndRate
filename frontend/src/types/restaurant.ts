@@ -7,19 +7,25 @@ export type Restaurant = {
   max_dinning_time: number;
   min_number_of_guests: number;
   max_number_of_guests: number;
-  highlights: string[];
   cancellation_policy: string;
   image: string;
-  city: string;
   full_address: string;
   rating: number;
+  remarks: string[];
   phone_number: string;
   opening_hours: string;
   average_rating: number;
+  total_reviews: number;
   cuisines: Cuisine[];
+  city: City;
 };
 
 export type Cuisine = {
+  id: number;
+  name: string;
+};
+
+export type City = {
   id: number;
   name: string;
 };

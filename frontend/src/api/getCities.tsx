@@ -6,7 +6,7 @@ type City = {
 };
 
 async function getCities(): Promise<City[]> {
-  const res = await axios.get('/api/cities');
+  const res = await axios.get('/api/restaurants/cities/');
   return res.data;
 }
 
